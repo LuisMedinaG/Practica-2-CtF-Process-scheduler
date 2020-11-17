@@ -1,8 +1,10 @@
-import matplotlib.pyplot as plt
 import random
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 
 class Process():
+    """Process class"""
     def __init__(self, processId, startTime, duration):
         self.processId = processId
         self.startTime = startTime
@@ -13,6 +15,7 @@ class Process():
 
 
 def makeRandomProcesses(numProcesses, maxDuration=100):
+    """Create N processes, with random start and duration"""
     processes = []
     for processId in range(numProcesses):
         duration = random.randint(1, maxDuration)
@@ -22,8 +25,12 @@ def makeRandomProcesses(numProcesses, maxDuration=100):
     return processes
 
 
-def get_cmap(n, name='hsv'):
-    return plt.cm.get_cmap(name, n)
+def getMaxFinishTime(processes):
+    maxFinishTime = 1
+    for p in processes:
+        pFinishTime = p.startTime + p.duration
+        maxFinishTime = max(maxFinishTime, pFinishTime)
+    return maxFinishTime
 
 
 def plotProcesses(processes):
@@ -35,20 +42,41 @@ def plotProcesses(processes):
     ax.axes.yaxis.set_visible(False)
 
     # Initialize range of posible colors
-    cmap = get_cmap(len(processes), 'viridis_r')
-
+    maxFinishTime = getMaxFinishTime(processes)
     barWidth = 10
-    y_position = 0
-    for p in processes:
-        ax.broken_barh([(p.startTime, p.duration)], (y_position, barWidth - 1),
-                       facecolors=cmap(p.processId))
-        y_position += barWidth
 
+    barCollection = []
+
+    def createBars():
+        yPosition = 0
+        for p in processes:
+            rect, = ax.barh(
+                y=yPosition,
+                width=p.duration,
+                left=p.startTime,
+                height=barWidth - 1)
+            barCollection.append(rect)
+            yPosition += barWidth
+
+    """ TODO: Falta hacer la parte de la animacion. """
+    # def drawProcess(globalTime):
+    #     for p, b in zip(processes, barCollection):
+    #         if globalTime >= p.startTime:
+    #             if globalTime >= p.startTime + p.duration:
+    #                 currDuration = p.duration
+    #             else:
+    #                 currDuration = globalTime - p.startTime
+    #         else:
+    #             currDuration = 0
+    #     b.set_height(globalTime)
+    # animation.FuncAnimation(fig, drawProcess, frames=50)
+
+    createBars()
     plt.show()
 
 
 def main():
-    processes = makeRandomProcesses(4)
+    processes = makeRandomProcesses(numProcesses=5)
     plotProcesses(processes)
 
 
