@@ -14,23 +14,24 @@ class Process():
         self.duration = duration
 
     def __repr__(self):
-        return f"ID: {self.processId}  STRT: {self.startTime}  DUR: {self.duration}"
+        return f"Id: {self.processId}  Tiempo inicio: {self.startTime}  Duracion: {self.duration}"
+
 
 class App:
     def __init__(self, windowTitle, windowSize):
         self.windowTitle = windowTitle
         self.windowSize = windowSize
-
+        self.parteDer = None
         self.mainWindow = None
         self.startTimeEntry = None
         self.durationEntry = None
 
         self.fig = None
         self.ax = None
-        
+
         self.processes = []
         self.totalProc = 0
-        
+
         self.createWindow()
 
     def run(self):
@@ -44,11 +45,14 @@ class App:
 
         parteIzq = tk.Frame(self.mainWindow, bg='white')
         parteIzq.place(relx=0.03, rely=0.05, relwidth=0.2, relheight=1)
-        parteDer = tk.Frame(self.mainWindow)
-        parteDer.place(relx=0.3, rely=0.05, relwidth=0.8, relheight=1)
+        self.parteDer = tk.Frame(self.mainWindow)
+        self.parteDer.place(relx=0.3, rely=0.05, relwidth=0.8, relheight=1)
 
         etiquetaTitulo = tk.Label(
-            parteIzq, text="Control de Procesos", justify=tk.CENTER, bg='white')
+            parteIzq,
+            text="Control de Procesos",
+            justify=tk.CENTER,
+            bg='white')
         etiquetaTitulo.place(relheight=0.05, relwidth=1)
 
         etiquetaInicio = tk.Label(
@@ -57,19 +61,31 @@ class App:
 
         etiquetaDuracion = tk.Label(
             parteIzq, text="Duracion", justify=tk.LEFT, bg='white')
-        etiquetaDuracion.place(rely=0.05, relx=0.5, relheight=0.03, relwidth=0.4)
+        etiquetaDuracion.place(
+            rely=0.05, relx=0.5, relheight=0.05, relwidth=0.4)
 
         self.startTimeEntry = tk.Entry(parteIzq)
         self.startTimeEntry.place(rely=0.1, relheight=0.03, relwidth=0.35)
         self.durationEntry = tk.Entry(parteIzq)
-        self.durationEntry.place(rely=0.1, relx=0.51, relheight=0.03, relwidth=0.35)
+        self.durationEntry.place(
+            rely=0.1, relx=0.51, relheight=0.03, relwidth=0.35)
 
         botonAgregar = tk.Button(parteIzq, text="+", command=self.addProcess)
         botonAgregar.pack(side=tk.LEFT)
         botonAgregar.place(rely=0.1, relx=0.9, relheight=0.03, relwidth=0.12)
 
-        botonIniciar = tk.Button(parteIzq, text="Iniciar", command=self.beginAnimation)
-        botonIniciar.pack(side=tk.LEFT)
+        etiquetaProcesos = tk.Label(text="Lista de procesos")
+        etiquetaProcesos.place(
+            rely=.25, relx=.02, relheight=0.04, relwidth=0.22)
+
+        self.listaBox = tk.Listbox(parteIzq)
+        self.listaBox.pack(side=tk.LEFT)
+        self.listaBox.place(rely=.25, relx=0.01, relheight=.35, relwidth=.99)
+
+        botonIniciar = tk.Button(
+            parteIzq, text="Iniciar", command=self.beginAnimation)
+        botonIniciar.pack(expand=True)
+        # botonIniciar.place(rely=.8, relx=.1, relheight=.1, relwidth=.9)
 
     def addProcess(self):
         # Get text from input
@@ -83,15 +99,24 @@ class App:
         process = Process(self.totalProc, startTime, duration)
         self.processes.append(process)
         self.totalProc += 1
-        
-        # DEBUGGING        
+
+        etiquetaExito = tk.Label(text="Proceso añadido", bg='white')
+        etiquetaExito.place(rely=.2, relheight=0.05, relwidth=0.25)
+        etiquetaExito.after(1000, etiquetaExito.destroy)
+
+        etiquetaExito = tk.Label(text="Proceso añadido", bg='white')
+        etiquetaExito.place(rely=.2, relheight=0.05, relwidth=0.25)
+        etiquetaExito.after(1000, etiquetaExito.destroy)
+
+        self.listaBox.insert("end", process)
+
+        # DEBUGGING
         print(process)
 
     def plotProcesses(self):
         self.fig = plt.Figure(figsize=(4.5, 6.4))
         self.ax = self.fig.add_subplot(1, 1, 1)
         self.ax.axes.yaxis.set_visible(False)
-
 
         # maxFinishTime = getMaxFinishTime(self.processes)
         # barCollection = []
@@ -107,19 +132,26 @@ class App:
             # barCollection.append(rect)
 
     def beginAnimation(self):
-        print("DEBUG: START ANIMATION")
+        # DEBUG
+        self.processes = makeRandomProcesses(4)
+        self.plotProcesses()
+
+        self.fig.subplots_adjust(
+            left=0.05, right=0.4, bottom=0.3, top=1, wspace=0, hspace=0)
+        linea = FigureCanvasTkAgg(self.fig, self.parteDer)
+        linea.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
         """ TODO: Falta hacer la parte de la animacion. """
-        # def animateProcess(globalTime):
-        #     for p, b in zip(processes, barCollection):
-        #         if globalTime >= p.startTime:
-        #             if globalTime >= p.startTime + p.duration:
-        #                 currDuration = p.duration
-        #             else:
-        #                 currDuration = globalTime - p.startTime
-        #         else:
-        #             currDuration = 0
-        #     b.set_height(globalTime)
+        def animateProcess(globalTime):
+            for p, b in zip(self.processes, self.barCollection):
+                if globalTime >= p.startTime:
+                    if globalTime >= p.startTime + p.duration:
+                        currDuration = p.duration
+                    else:
+                        currDuration = globalTime - p.startTime
+                else:
+                    currDuration = 0
+            b.set_height(globalTime)
         #
         # animation.FuncAnimation(fig, animateProcess, frames=50)
 
@@ -145,7 +177,9 @@ def getMaxFinishTime(processes):
 
 def main():
     app = App("Practica 2", "1200x720")
+    app.beginAnimation()
     app.run()
+
 
 if __name__ == '__main__':
     main()

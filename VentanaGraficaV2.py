@@ -74,8 +74,9 @@ cajaTextoInicio.place(rely=0.1, relheight=0.03, relwidth=0.45)
 cajaTextoDuracion = tk.Entry(parteIzq)
 cajaTextoDuracion.place(rely=0.1, relx=0.51, relheight=0.03, relwidth=0.45)
 
-botonAgregar = tk.Button(parteIzq, text="Agregar nuevo", command=agregarNuevoProceso())
-botonAgregar.place(rely=0.9, relx=0.25, relheight=0.03, relwidth=0.5)
+botonAgregar = tk.Button(parteIzq, text="Agregar nuevo", command=agregarNuevoProceso)
+botonAgregar.pack(side=tk.LEFT)
+# botonAgregar.place(rely=0.9, relx=0.25, relheight=0.03, relwidth=0.5)
 
 # Configuracion de la Grafica
 
