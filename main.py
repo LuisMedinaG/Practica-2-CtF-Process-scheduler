@@ -6,120 +6,122 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 class Process():
-    """Process class"""
-
     def __init__(self, processId, startTime, duration):
         self.processId = processId
         self.startTime = startTime
         self.duration = duration
+        self.rectangle = None
 
     def __repr__(self):
-        return f"Id: {self.processId}  Tiempo inicio: {self.startTime}  Duracion: {self.duration}"
+        return f" Id: {self.processId}  |  Tiempo inicio: {self.startTime}  |  Duracion: {self.duration} "
 
 
 class App:
     def __init__(self, windowTitle, windowSize):
         self.windowTitle = windowTitle
         self.windowSize = windowSize
-        self.parteDer = None
+        self.leftFrame  = None
+        self.rightFrame = None
         self.mainWindow = None
-        self.startTimeEntry = None
-        self.durationEntry = None
-
-        self.fig = None
-        self.ax = None
-
+        
         self.processes = []
         self.totalProc = 0
+        self.globalTime = 0
 
         self.createWindow()
-
-    def run(self):
-        self.mainWindow.mainloop()
 
     def createWindow(self, ):
         self.mainWindow = tk.Tk()
         self.mainWindow.title(self.windowTitle)
         self.mainWindow.geometry(self.windowSize)
-        self.mainWindow.configure(bg='white')
 
-        parteIzq = tk.Frame(self.mainWindow, bg='white')
-        parteIzq.place(relx=0.03, rely=0.05, relwidth=0.2, relheight=1)
-        self.parteDer = tk.Frame(self.mainWindow)
-        self.parteDer.place(relx=0.3, rely=0.05, relwidth=0.8, relheight=1)
+        self.mainWindow.grid_columnconfigure(0, weight=1)
+        self.mainWindow.grid_columnconfigure(1, weight=3)
+        self.mainWindow.grid_rowconfigure(0, weight=1)
+        
+        self.leftFrame = tk.Frame(self.mainWindow)
+        self.rightFrame = tk.Frame(self.mainWindow, bg='grey')
+        self.leftFrame.grid(row=0, column=0, ipadx=2, padx=5, pady=5, sticky="nsew")
+        self.rightFrame.grid(row=0, column=1, ipadx=5, padx=5, pady=5, sticky="nsew") 
 
-        etiquetaTitulo = tk.Label(
-            parteIzq,
-            text="Control de Procesos",
-            justify=tk.CENTER,
-            bg='white')
-        etiquetaTitulo.place(relheight=0.05, relwidth=1)
+        self.leftFrame.columnconfigure(0, weight=1)
+        self.leftFrame.columnconfigure(1, weight=1)
+        self.leftFrame.rowconfigure(6, weight=1)
+        etiquetaTitulo = tk.Label(self.leftFrame, text="Control de Procesos")
+        etiquetaTitulo.grid(row=0, column=0, columnspan=2, pady=5, sticky="ew")
 
-        etiquetaInicio = tk.Label(
-            parteIzq, text="Inicio", justify=tk.CENTER, bg='white')
-        etiquetaInicio.place(rely=0.05, relheight=0.05, relwidth=0.4)
+        etiquetaInicio = tk.Label(self.leftFrame, text="Inicio")
+        etiquetaInicio.grid(row=1, column=0, sticky="ew")
 
-        etiquetaDuracion = tk.Label(
-            parteIzq, text="Duracion", justify=tk.LEFT, bg='white')
-        etiquetaDuracion.place(
-            rely=0.05, relx=0.5, relheight=0.05, relwidth=0.4)
+        etiquetaDuracion = tk.Label(self.leftFrame, text="Duracion")
+        etiquetaDuracion.grid(row=1, column=1, sticky="ew")
 
-        self.startTimeEntry = tk.Entry(parteIzq)
-        self.startTimeEntry.place(rely=0.1, relheight=0.03, relwidth=0.35)
-        self.durationEntry = tk.Entry(parteIzq)
-        self.durationEntry.place(
-            rely=0.1, relx=0.51, relheight=0.03, relwidth=0.35)
+        self.startTimeEntry = tk.Entry(self.leftFrame)
+        self.startTimeEntry.grid(row=2, column=0, padx=10, pady=10,sticky="ew")
+        self.durationEntry = tk.Entry(self.leftFrame)
+        self.durationEntry.grid(row=2, column=1, padx=10, pady=10,sticky="ew")
 
-        botonAgregar = tk.Button(parteIzq, text="+", command=self.addProcess)
-        botonAgregar.pack(side=tk.LEFT)
-        botonAgregar.place(rely=0.1, relx=0.9, relheight=0.03, relwidth=0.12)
+        self.botonAgregar = tk.Button(self.leftFrame, text="Agregar proceso", command=self.addProcess)
+        self.botonAgregar.grid(row=3, column=0, columnspan=2, ipady=5, padx=10, pady=(5, 20),sticky="ew")
 
-        etiquetaProcesos = tk.Label(text="Lista de procesos")
-        etiquetaProcesos.place(
-            rely=.25, relx=.02, relheight=0.04, relwidth=0.22)
+        etiquetaProcesos = tk.Label(self.leftFrame, text="Lista de procesos")
+        etiquetaProcesos.grid(row=4, column=0, columnspan=2, pady=(20, 5), sticky="ew")
 
-        self.listaBox = tk.Listbox(parteIzq)
-        self.listaBox.pack(side=tk.LEFT)
-        self.listaBox.place(rely=.25, relx=0.01, relheight=.35, relwidth=.99)
+        etiquetaProcesos = tk.Label(self.leftFrame, text=" ID  |  TIEMPO LLEGADA  |  DURACION ")
+        etiquetaProcesos.grid(row=5, column=0, sticky="ew")
+        etiquetaProcesos = tk.Label(self.leftFrame, text=" ID  |  EJECUCION")
+        etiquetaProcesos.grid(row=5, column=1, sticky="ew")
 
-        botonIniciar = tk.Button(
-            parteIzq, text="Iniciar", command=self.beginAnimation)
-        botonIniciar.pack(expand=True)
-        # botonIniciar.place(rely=.8, relx=.1, relheight=.1, relwidth=.9)
+        self.listaBoxL = tk.Listbox(self.leftFrame)
+        self.listaBoxL.grid(row=6, column=0, pady=5, padx=5, sticky="nsew")
+        self.listaBoxR = tk.Listbox(self.leftFrame)
+        self.listaBoxR.grid(row=6, column=1, pady=5, padx=5, sticky="nsew")
+
+        globalTimeLbl = tk.Label(self.leftFrame, text="Tiempo global: ")
+        globalTimeLbl.grid(row=7, column=0, ipady=20, sticky="ew")
+        self.globalTimeCnt = tk.Label(self.leftFrame, text="0")
+        self.globalTimeCnt.grid(row=7, column=1, ipady=20, sticky="ew")
+
+        self.botonIniciar = tk.Button(self.leftFrame, text="Comenzar", command=self.startSimulation)
+        self.botonIniciar.grid(row=8, column=0, columnspan=2, pady=5, padx=5, ipady=15, ipadx=10, sticky="ew")
+    
+    def run(self):
+        self.mainWindow.mainloop()
 
     def addProcess(self):
         # Get text from input
-        startTime = self.startTimeEntry.get()
-        duration = self.durationEntry.get()
+        try:
+            startTime = int(self.startTimeEntry.get())
+            duration = int(self.durationEntry.get())
+        except ValueError:
+            entryErrorLbl = tk.Label(self.leftFrame, text="ERROR: Valores invalidos", justify=tk.CENTER, bg='red')
+            entryErrorLbl.grid(row=3, column=0, columnspan=2)
+            entryErrorLbl.after(1500, entryErrorLbl.destroy)
+            return
 
-        # Clean the tk.Entry
         self.startTimeEntry.delete(0, "end")
         self.durationEntry.delete(0, "end")
 
         process = Process(self.totalProc, startTime, duration)
+
+        self.listaBoxL.insert("end", process)
         self.processes.append(process)
         self.totalProc += 1
 
-        etiquetaExito = tk.Label(text="Proceso añadido", bg='white')
-        etiquetaExito.place(rely=.2, relheight=0.05, relwidth=0.25)
-        etiquetaExito.after(1000, etiquetaExito.destroy)
+    def getMaxFinishTime(self):
+        maxFinishTime = 1
+        for p in self.processes:
+            pFinishTime = p.startTime + p.duration
+            maxFinishTime = max(maxFinishTime, pFinishTime)
+        return maxFinishTime
+        
+    def createProcessesBarhs(self):
+        plt.rcParams.update({'figure.autolayout': True})
 
-        etiquetaExito = tk.Label(text="Proceso añadido", bg='white')
-        etiquetaExito.place(rely=.2, relheight=0.05, relwidth=0.25)
-        etiquetaExito.after(1000, etiquetaExito.destroy)
-
-        self.listaBox.insert("end", process)
-
-        # DEBUGGING
-        print(process)
-
-    def plotProcesses(self):
-        self.fig = plt.Figure(figsize=(4.5, 6.4))
-        self.ax = self.fig.add_subplot(1, 1, 1)
+        self.fig = plt.Figure(figsize=(1,1))
+        self.ax = self.fig.add_subplot(1,1,1)
         self.ax.axes.yaxis.set_visible(False)
-
-        # maxFinishTime = getMaxFinishTime(self.processes)
-        # barCollection = []
+        
         barWidth = 10
         yPosition = 0
         for p in self.processes:
@@ -129,21 +131,21 @@ class App:
                 left=p.startTime,
                 height=barWidth - 1)
             yPosition += barWidth
-            # barCollection.append(rect)
+            p.rectangle = rect
 
-    def beginAnimation(self):
-        # DEBUG
-        self.processes = makeRandomProcesses(4)
-        self.plotProcesses()
+        mpl_canvas = FigureCanvasTkAgg(self.fig, self.rightFrame)
+        mpl_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        self.fig.subplots_adjust(
-            left=0.05, right=0.4, bottom=0.3, top=1, wspace=0, hspace=0)
-        linea = FigureCanvasTkAgg(self.fig, self.parteDer)
-        linea.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+    def startAnimation(self, animationSpeed=0.1):
+        self.listaBoxR.delete(0,'end')
+        maxFinishTime = self.getMaxFinishTime()
+        self.processes.sort(key=lambda proc: proc.startTime)
+        
+        for globalTime in range(maxFinishTime+1):
+            self.globalTimeCnt.configure(text=str(globalTime))
+            self.listaBoxR.delete(0,'end')
 
-        """ TODO: Falta hacer la parte de la animacion. """
-        def animateProcess(globalTime):
-            for p, b in zip(self.processes, self.barCollection):
+            for p in self.processes:
                 if globalTime >= p.startTime:
                     if globalTime >= p.startTime + p.duration:
                         currDuration = p.duration
@@ -151,11 +153,30 @@ class App:
                         currDuration = globalTime - p.startTime
                 else:
                     currDuration = 0
-            b.set_height(globalTime)
-        #
-        # animation.FuncAnimation(fig, animateProcess, frames=50)
 
+                p.rectangle.set_width(currDuration)
+                self.listaBoxR.insert('end', f' Id: {p.processId}  |  Ejecucion: {currDuration}')
+    
+            self.fig.canvas.draw()
+            plt.pause(animationSpeed)
 
+    def startSimulation(self):
+        # # --- FOR TESTING ---
+        # self.processes = makeRandomProcesses(5, 10)
+
+        if not self.processes:
+            return
+
+        self.createProcessesBarhs()
+        self.startAnimation(0.5)
+
+        # Clear all
+        self.processes = []
+        self.listaBoxL.delete(0,'end')
+        
+        # TODO: clear canvas
+
+# --- FOR TESTING ---
 def makeRandomProcesses(numProcesses, maxDuration=100):
     """Create N processes, with random start and duration"""
     processes = []
@@ -163,21 +184,11 @@ def makeRandomProcesses(numProcesses, maxDuration=100):
         duration = random.randint(1, maxDuration)
         startTime = random.randint(0, maxDuration)
         processes.append(Process(processId, startTime, duration))
-
     return processes
 
 
-def getMaxFinishTime(processes):
-    maxFinishTime = 1
-    for p in processes:
-        pFinishTime = p.startTime + p.duration
-        maxFinishTime = max(maxFinishTime, pFinishTime)
-    return maxFinishTime
-
-
 def main():
-    app = App("Practica 2", "1200x720")
-    app.beginAnimation()
+    app = App("Practica 2", "1200x800")
     app.run()
 
 
