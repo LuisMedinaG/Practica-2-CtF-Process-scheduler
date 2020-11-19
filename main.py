@@ -27,6 +27,8 @@ class App:
         self.totalProc = 0
         self.globalTime = 0
 
+        self.fig = None
+
         self.createWindow()
 
     def createWindow(self, ):
@@ -48,6 +50,10 @@ class App:
         self.leftFrame.columnconfigure(0, weight=1)
         self.leftFrame.columnconfigure(1, weight=1)
         self.leftFrame.rowconfigure(6, weight=1)
+
+        self.rightFrame.columnconfigure(0, weight=1)
+        self.rightFrame.rowconfigure(0, weight=1)
+
         etiquetaTitulo = tk.Label(self.leftFrame, text="Control de Procesos")
         etiquetaTitulo.grid(row=0, column=0, columnspan=2, pady=5, sticky="ew")
 
@@ -141,6 +147,11 @@ class App:
         return maxFinishTime
 
     def createProcessesBarhs(self):
+        try: 
+            self.canvas.get_tk_widget().destroy()
+        except:
+            pass
+
         plt.rcParams.update({'figure.autolayout': True})
 
         self.fig = plt.Figure(figsize=(1, 1))
@@ -159,7 +170,7 @@ class App:
             p.rectangle = rect
 
         mpl_canvas = FigureCanvasTkAgg(self.fig, self.rightFrame)
-        mpl_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        mpl_canvas.get_tk_widget().grid(row=0, column=0, sticky="snew")
 
     def startAnimation(self, animationSpeed=0.1):
         self.listaBoxR.delete(0, 'end')
@@ -199,7 +210,7 @@ class App:
         # Clear all
         self.processes = []
         self.listaBoxL.delete(0, 'end')
-
+        
         # TODO: clear canvas
 
 
