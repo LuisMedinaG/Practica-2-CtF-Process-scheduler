@@ -34,8 +34,10 @@ class App:
         self.totalProc = 0
         self.globalTime = 0
 
-        self.listaBox = None
-        self.listaOrd = None
+        self.listaBox = None #
+        self.listaOrd = None #
+        self.orderList = None #
+        self.contList = None #
 
         self.createWindow()
 
@@ -89,8 +91,8 @@ class App:
 
         botonIniciar = tk.Button(
             parteIzq, text="Iniciar", command=self.beginAnimation)
-        # botonIniciar.pack(expand=True)
-        botonIniciar.place(rely=.8, relx=.1, relheight=.1, relwidth=.9)
+        # botonIniciar.place(rely=.8, relx=.1, relheight=.1, relwidth=.9)
+        botonIniciar.pack(expand=True)
 
     def addProcess(self):
         # Get text from input
@@ -115,10 +117,42 @@ class App:
 
         self.listaBox.insert("end", process)
 
-        # DEBUGGING
-        print(process)
+    def createProcessesTable(self):
+        izq = tk.Frame(self.mainWindow, bg='white')
+        izq.place(relx=0.01, rely=.05, relwidth=0.27, relheight=.9)
+        labelDatos = tk.Label(izq, text="Datos de los procesos", bg='white')
+        labelDatos.place(rely=.01, relx=0.3, relheight=.05, relwidth=.4)
 
-    def plotProcesses(self):
+        self.listaOrd = tk.Listbox(izq)
+        self.listaOrd.pack(side=tk.LEFT)
+        self.listaOrd.place(rely=.05, relheight=.35, relwidth=.99)
+
+        for i in range(len(self.processes)):
+            self.listaOrd.insert("end", self.processes[i])
+
+        """
+        # Ejemplo codigo demas tablas
+        # Crea la etiqueta de la segunda tabla
+        datosOrd = tk.Label(izq,text="Orden de ejecucion", bg="white")
+        datosOrd.place(rely=0.42,relx=0.3, relheight=.05, relwidth=.4)
+        
+        # Crea el Listbox y lo acomoda
+        self.orderList = tk.Listbox(izq)
+        self.orderList.pack(side=tk.LEFT)
+        self.orderList.place(rely=.46, relheight=.35, relwidth=.99)
+        
+        # Crea la etiqueta del contador
+        contTotal = tk.Label(izq, text="Contador global", bg="white")
+        contTotal.place(rely=.82, relx=.3, relheight=.05, relwidth=.4)
+        
+        # Crea el listbox del contador
+        self.contList = tk.Listbox(izq)
+        self.contList.pack(side=tk.LEFT)
+        self.contList.place(rely=.88, relx=.28, relheight=.088, relwidth=.45)
+        # Termina ejemplo codigo\
+        """
+
+    def createProcessesBarhs(self):
         self.fig = plt.Figure(figsize=(4.5, 6.4))
         self.ax = self.fig.add_subplot(1, 1, 1)
         self.ax.axes.yaxis.set_visible(False)
@@ -134,31 +168,12 @@ class App:
             yPosition += barWidth
             self.barCollection.append(rect)
 
-    def beginAnimation(self):
-        izq = tk.Frame(self.mainWindow, bg='white')
-        izq.place(relx=0.01, rely=.05, relwidth=0.27, relheight=.9)                
-        labelDatos = tk.Label(izq, text="Datos de los procesos",bg='white')
-        labelDatos.place(rely=.01,relx=0.3, relheight=.05, relwidth=.4)
-        
-        self.listaOrd = tk.Listbox(izq)
-        self.listaOrd.pack(side=tk.LEFT)
-        self.listaOrd.place(rely=.05, relheight=.35,relwidth=.99)
-        for i in range(len(self.processes)):
-            self.listaOrd.insert("end",self.processes[i])
-
-        # DEBUG
-        self.processes = makeRandomProcesses(10)
-
-        if not self.processes:
-            return
-            
-        self.plotProcesses()
-
-        # Add plot to window
-        self.fig.subplots_adjust(left=0.05, right=0.8, bottom=0.2, top=1, wspace=0, hspace=0)
+        self.fig.subplots_adjust(
+            left=0.05, right=0.8, bottom=0.2, top=1, wspace=0, hspace=0)
         figCanvas = FigureCanvasTkAgg(self.fig, self.parteDer)
         figCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
+    def animateProcesses(self, animationSpeed=0.1):
         maxFinishTime = getMaxFinishTime(self.processes)
         for globalTime in range(maxFinishTime):
             for pro, bar in zip(self.processes, self.barCollection):
@@ -172,9 +187,21 @@ class App:
                 bar.set_width(currDuration)
 
             self.fig.canvas.draw()
-            plt.pause(0.1)
+            plt.pause(animationSpeed)
+
+    def beginAnimation(self):
+        # --- FOR TESTING ---
+        self.processes = makeRandomProcesses(3)
+
+        if not self.processes:
+            return
+
+        self.createProcessesTable()
+        # self.createProcessesBarhs()
+        # self.animateProcesses()
 
 
+# --- FOR TESTING ---
 def makeRandomProcesses(numProcesses, maxDuration=100):
     """Create N processes, with random start and duration"""
     processes = []
