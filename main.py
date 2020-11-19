@@ -1,7 +1,6 @@
 import tkinter as tk
 import random
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
@@ -20,10 +19,10 @@ class App:
     def __init__(self, windowTitle, windowSize):
         self.windowTitle = windowTitle
         self.windowSize = windowSize
-        self.leftFrame  = None
+        self.leftFrame = None
         self.rightFrame = None
         self.mainWindow = None
-        
+
         self.processes = []
         self.totalProc = 0
         self.globalTime = 0
@@ -38,11 +37,13 @@ class App:
         self.mainWindow.grid_columnconfigure(0, weight=1)
         self.mainWindow.grid_columnconfigure(1, weight=3)
         self.mainWindow.grid_rowconfigure(0, weight=1)
-        
+
         self.leftFrame = tk.Frame(self.mainWindow)
         self.rightFrame = tk.Frame(self.mainWindow, bg='grey')
-        self.leftFrame.grid(row=0, column=0, ipadx=2, padx=5, pady=5, sticky="nsew")
-        self.rightFrame.grid(row=0, column=1, ipadx=5, padx=5, pady=5, sticky="nsew") 
+        self.leftFrame.grid(
+            row=0, column=0, ipadx=2, padx=5, pady=5, sticky="nsew")
+        self.rightFrame.grid(
+            row=0, column=1, ipadx=5, padx=5, pady=5, sticky="nsew")
 
         self.leftFrame.columnconfigure(0, weight=1)
         self.leftFrame.columnconfigure(1, weight=1)
@@ -57,17 +58,28 @@ class App:
         etiquetaDuracion.grid(row=1, column=1, sticky="ew")
 
         self.startTimeEntry = tk.Entry(self.leftFrame)
-        self.startTimeEntry.grid(row=2, column=0, padx=10, pady=10,sticky="ew")
+        self.startTimeEntry.grid(
+            row=2, column=0, padx=10, pady=10, sticky="ew")
         self.durationEntry = tk.Entry(self.leftFrame)
-        self.durationEntry.grid(row=2, column=1, padx=10, pady=10,sticky="ew")
+        self.durationEntry.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
 
-        self.botonAgregar = tk.Button(self.leftFrame, text="Agregar proceso", command=self.addProcess)
-        self.botonAgregar.grid(row=3, column=0, columnspan=2, ipady=5, padx=10, pady=(5, 20),sticky="ew")
+        self.botonAgregar = tk.Button(
+            self.leftFrame, text="Agregar proceso", command=self.addProcess)
+        self.botonAgregar.grid(
+            row=3,
+            column=0,
+            columnspan=2,
+            ipady=5,
+            padx=10,
+            pady=(5, 20),
+            sticky="ew")
 
         etiquetaProcesos = tk.Label(self.leftFrame, text="Lista de procesos")
-        etiquetaProcesos.grid(row=4, column=0, columnspan=2, pady=(20, 5), sticky="ew")
+        etiquetaProcesos.grid(
+            row=4, column=0, columnspan=2, pady=(20, 5), sticky="ew")
 
-        etiquetaProcesos = tk.Label(self.leftFrame, text=" ID  |  TIEMPO LLEGADA  |  DURACION ")
+        etiquetaProcesos = tk.Label(
+            self.leftFrame, text=" ID  |  TIEMPO LLEGADA  |  DURACION ")
         etiquetaProcesos.grid(row=5, column=0, sticky="ew")
         etiquetaProcesos = tk.Label(self.leftFrame, text=" ID  |  EJECUCION")
         etiquetaProcesos.grid(row=5, column=1, sticky="ew")
@@ -82,9 +94,18 @@ class App:
         self.globalTimeCnt = tk.Label(self.leftFrame, text="0")
         self.globalTimeCnt.grid(row=7, column=1, ipady=20, sticky="ew")
 
-        self.botonIniciar = tk.Button(self.leftFrame, text="Comenzar", command=self.startSimulation)
-        self.botonIniciar.grid(row=8, column=0, columnspan=2, pady=5, padx=5, ipady=15, ipadx=10, sticky="ew")
-    
+        self.botonIniciar = tk.Button(
+            self.leftFrame, text="Comenzar", command=self.startSimulation)
+        self.botonIniciar.grid(
+            row=8,
+            column=0,
+            columnspan=2,
+            pady=5,
+            padx=5,
+            ipady=15,
+            ipadx=10,
+            sticky="ew")
+
     def run(self):
         self.mainWindow.mainloop()
 
@@ -94,7 +115,11 @@ class App:
             startTime = int(self.startTimeEntry.get())
             duration = int(self.durationEntry.get())
         except ValueError:
-            entryErrorLbl = tk.Label(self.leftFrame, text="ERROR: Valores invalidos", justify=tk.CENTER, bg='red')
+            entryErrorLbl = tk.Label(
+                self.leftFrame,
+                text="ERROR: Valores invalidos",
+                justify=tk.CENTER,
+                bg='red')
             entryErrorLbl.grid(row=3, column=0, columnspan=2)
             entryErrorLbl.after(1500, entryErrorLbl.destroy)
             return
@@ -114,14 +139,14 @@ class App:
             pFinishTime = p.startTime + p.duration
             maxFinishTime = max(maxFinishTime, pFinishTime)
         return maxFinishTime
-        
+
     def createProcessesBarhs(self):
         plt.rcParams.update({'figure.autolayout': True})
 
-        self.fig = plt.Figure(figsize=(1,1))
-        self.ax = self.fig.add_subplot(1,1,1)
+        self.fig = plt.Figure(figsize=(1, 1))
+        self.ax = self.fig.add_subplot(1, 1, 1)
         self.ax.axes.yaxis.set_visible(False)
-        
+
         barWidth = 10
         yPosition = 0
         for p in self.processes:
@@ -137,13 +162,13 @@ class App:
         mpl_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     def startAnimation(self, animationSpeed=0.1):
-        self.listaBoxR.delete(0,'end')
+        self.listaBoxR.delete(0, 'end')
         maxFinishTime = self.getMaxFinishTime()
         self.processes.sort(key=lambda proc: proc.startTime)
-        
-        for globalTime in range(maxFinishTime+1):
+
+        for globalTime in range(maxFinishTime + 1):
             self.globalTimeCnt.configure(text=str(globalTime))
-            self.listaBoxR.delete(0,'end')
+            self.listaBoxR.delete(0, 'end')
 
             for p in self.processes:
                 if globalTime >= p.startTime:
@@ -155,8 +180,9 @@ class App:
                     currDuration = 0
 
                 p.rectangle.set_width(currDuration)
-                self.listaBoxR.insert('end', f' Id: {p.processId}  |  Ejecucion: {currDuration}')
-    
+                self.listaBoxR.insert(
+                    'end', f' Id: {p.processId}  |  Ejecucion: {currDuration}')
+
             self.fig.canvas.draw()
             plt.pause(animationSpeed)
 
@@ -172,9 +198,10 @@ class App:
 
         # Clear all
         self.processes = []
-        self.listaBoxL.delete(0,'end')
-        
+        self.listaBoxL.delete(0, 'end')
+
         # TODO: clear canvas
+
 
 # --- FOR TESTING ---
 def makeRandomProcesses(numProcesses, maxDuration=100):
