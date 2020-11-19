@@ -29,8 +29,13 @@ class App:
         self.fig = None
         self.ax = None
 
+        self.barCollection = []
         self.processes = []
         self.totalProc = 0
+        self.globalTime = 0
+
+        self.listaBox = None
+        self.listaOrd = None
 
         self.createWindow()
 
@@ -84,13 +89,13 @@ class App:
 
         botonIniciar = tk.Button(
             parteIzq, text="Iniciar", command=self.beginAnimation)
-        botonIniciar.pack(expand=True)
-        # botonIniciar.place(rely=.8, relx=.1, relheight=.1, relwidth=.9)
+        # botonIniciar.pack(expand=True)
+        botonIniciar.place(rely=.8, relx=.1, relheight=.1, relwidth=.9)
 
     def addProcess(self):
         # Get text from input
-        startTime = self.startTimeEntry.get()
-        duration = self.durationEntry.get()
+        startTime = int(self.startTimeEntry.get())
+        duration = int(self.durationEntry.get())
 
         # Clean the tk.Entry
         self.startTimeEntry.delete(0, "end")
@@ -118,8 +123,6 @@ class App:
         self.ax = self.fig.add_subplot(1, 1, 1)
         self.ax.axes.yaxis.set_visible(False)
 
-        # maxFinishTime = getMaxFinishTime(self.processes)
-        # barCollection = []
         barWidth = 10
         yPosition = 0
         for p in self.processes:
@@ -129,31 +132,47 @@ class App:
                 left=p.startTime,
                 height=barWidth - 1)
             yPosition += barWidth
-            # barCollection.append(rect)
+            self.barCollection.append(rect)
 
     def beginAnimation(self):
+        izq = tk.Frame(self.mainWindow, bg='white')
+        izq.place(relx=0.01, rely=.05, relwidth=0.27, relheight=.9)                
+        labelDatos = tk.Label(izq, text="Datos de los procesos",bg='white')
+        labelDatos.place(rely=.01,relx=0.3, relheight=.05, relwidth=.4)
+        
+        self.listaOrd = tk.Listbox(izq)
+        self.listaOrd.pack(side=tk.LEFT)
+        self.listaOrd.place(rely=.05, relheight=.35,relwidth=.99)
+        for i in range(len(self.processes)):
+            self.listaOrd.insert("end",self.processes[i])
+
         # DEBUG
-        self.processes = makeRandomProcesses(4)
+        self.processes = makeRandomProcesses(10)
+
+        if not self.processes:
+            return
+            
         self.plotProcesses()
 
-        self.fig.subplots_adjust(
-            left=0.05, right=0.4, bottom=0.3, top=1, wspace=0, hspace=0)
-        linea = FigureCanvasTkAgg(self.fig, self.parteDer)
-        linea.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        # Add plot to window
+        self.fig.subplots_adjust(left=0.05, right=0.8, bottom=0.2, top=1, wspace=0, hspace=0)
+        figCanvas = FigureCanvasTkAgg(self.fig, self.parteDer)
+        figCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-        """ TODO: Falta hacer la parte de la animacion. """
-        def animateProcess(globalTime):
-            for p, b in zip(self.processes, self.barCollection):
-                if globalTime >= p.startTime:
-                    if globalTime >= p.startTime + p.duration:
-                        currDuration = p.duration
+        maxFinishTime = getMaxFinishTime(self.processes)
+        for globalTime in range(maxFinishTime):
+            for pro, bar in zip(self.processes, self.barCollection):
+                if globalTime >= pro.startTime:
+                    if globalTime >= pro.startTime + pro.duration:
+                        currDuration = pro.duration
                     else:
-                        currDuration = globalTime - p.startTime
+                        currDuration = globalTime - pro.startTime
                 else:
                     currDuration = 0
-            b.set_height(globalTime)
-        #
-        # animation.FuncAnimation(fig, animateProcess, frames=50)
+                bar.set_width(currDuration)
+
+            self.fig.canvas.draw()
+            plt.pause(0.1)
 
 
 def makeRandomProcesses(numProcesses, maxDuration=100):
@@ -177,7 +196,6 @@ def getMaxFinishTime(processes):
 
 def main():
     app = App("Practica 2", "1200x720")
-    app.beginAnimation()
     app.run()
 
 
